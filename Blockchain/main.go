@@ -6,19 +6,19 @@ import (
 	"github.com/andrea-saboc/Building-Blockchain-in-Golang/blockchain"
 	"log"
 	"os"
-	"rsc.io/quote"
 	"runtime"
 	"strconv"
 )
 
 type CommandLine struct {
-	blockchain *blockchain.BlockChain
 }
 
 func (cli *CommandLine) printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("add -block BLOCK_DATA - add a block to the chain")
-	fmt.Println("print - Prints the blocks in the chain")
+	fmt.Println("getbalance -address ADDRESS - get the balance for an address")
+	fmt.Println("createblockchain -address ADDRESS creates a blockchain")
+	fmt.Println("printchain - Prints the blocks in the chain")
+	fmt.Println("send -from FROM -to TO -amount AMOUNT - Send amount")
 }
 
 func (cli *CommandLine) validateArgs() {
@@ -29,19 +29,44 @@ func (cli *CommandLine) validateArgs() {
 	}
 }
 
-func (cli *CommandLine) addBlock(data string) {
-	cli.blockchain.AddBlock(data)
-	fmt.Println("Added Block!")
+func (cli *CommandLine) createBlockChain(address string) {
+	chain := blockchain.InitBlockcChain(address)
+	chain.Database.Close()
+	fmt.Println("Finished!")
+}
+
+func (cli *CommandLine) getBalance(address string) {
+	chain := blockchain.ContinueBlockChain(address)
+	defer chain.Database.Close()
+
+	balance := 0
+	UTXOs := chain.FindUTXO(address)
+
+	for _, out := range UTXOs {
+		balance += out.Value
+	}
+
+	fmt.Printf("Balance of %s: %d\n", address, balance)
+}
+
+func (cli *CommandLine) send(from, to string, amount int) {
+	chain := blockchain.ContinueBlockChain(from)
+	defer chain.Database.Close()
+
+	tx := blockchain.NewTransaction(from, to, amount, chain)
+	chain.AddBlock([]*blockchain.Transaction{tx})
+	fmt.Println("Success!")
 }
 
 func (cli *CommandLine) printChain() {
-	iter := cli.blockchain.Iterator()
+	chain := blockchain.ContinueBlockChain("")
+	defer chain.Database.Close()
+	iter := chain.Iterator()
 
 	for {
 		block := iter.Next()
 
 		fmt.Printf("Previous Hash: %x\n", block.PrevHash)
-		fmt.Printf("Data in Block: %s\n", block.Data)
 		fmt.Printf("Hash: %x\n", block.Hash)
 
 		pow := blockchain.NewProof(block)
@@ -57,34 +82,68 @@ func (cli *CommandLine) printChain() {
 func (cli *CommandLine) run() {
 	cli.validateArgs()
 
-	addBlockCmd := flag.NewFlagSet("add", flag.ExitOnError)
+	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
+	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
+	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("print", flag.ExitOnError)
-	addBlockData := addBlockCmd.String("block", "", "Block data")
+
+	getBalanceAddress := getBalanceCmd.String("address", "", "The address")
+	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address")
+	sendFrom := sendCmd.String("from", "", "Source wallet address")
+	sendTo := sendCmd.String("to", "", "Destination wallet address")
+	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
 
 	switch os.Args[1] {
-	case "add":
-		err := addBlockCmd.Parse(os.Args[2:])
+	case "getbalance":
+		err := getBalanceCmd.Parse(os.Args[2:])
+		if err != nil {
+
+		}
+	case "createblockchain":
+		err := createBlockchainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
-	case "print":
+	case "printchain":
 		err := printChainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
+	case "send":
+		err := sendCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+
 	default:
 		cli.printUsage()
 		runtime.Goexit()
 
 	}
 
-	if addBlockCmd.Parsed() {
-		if *addBlockData == "" {
-			addBlockCmd.Usage()
+	if getBalanceCmd.Parsed() {
+		if *getBalanceAddress == "" {
+			getBalanceCmd.Usage()
 			runtime.Goexit()
 		}
-		cli.addBlock(*addBlockData)
+		cli.getBalance(*getBalanceAddress)
 
+	}
+
+	if createBlockchainCmd.Parsed() {
+		if *createBlockchainAddress == "" {
+			createBlockchainCmd.Usage()
+			runtime.Goexit()
+		}
+		cli.createBlockChain(*createBlockchainAddress)
+	}
+
+	if sendCmd.Parsed() {
+		if *sendTo == "" || *sendFrom == "" || *sendAmount == 0 {
+			sendCmd.Usage()
+			runtime.Goexit()
+		}
+		cli.send(*sendFrom, *sendTo, *sendAmount)
 	}
 
 	if printChainCmd.Parsed() {
@@ -94,20 +153,7 @@ func (cli *CommandLine) run() {
 
 func main() {
 	defer os.Exit(0)
-	fmt.Println(quote.Hello())
 
-	//if we change the data in one block, the hashes will be completely different because the cash is related to the previous
-	/*chain.AddBlock("First Block after Genesis")
-	chain.AddBlock("Second Block after Genesis")
-	chain.AddBlock("Third Block after Genesis")*/
-
-	chain := blockchain.InitBlockChain()
-	defer chain.Database.Close() // os.Exit() it only closes when exited properly thats because we use Goexit instead of exit
-
-	cli := CommandLine{chain}
+	cli := CommandLine{}
 	cli.run()
-
-	/*for _, block := range chain.Blocks {
-
-	}*/
 }

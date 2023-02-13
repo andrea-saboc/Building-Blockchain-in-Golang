@@ -1,10 +1,15 @@
 package blockchain
 
+import (
+	"bytes"
+	"crypto/sha256"
+)
+
 type Block struct {
-	Hash     []byte
-	Data     []byte
-	PrevHash []byte
-	Nonce    int
+	Hash         []byte
+	Transactions []*Transaction //each block has to have at least one transaction inside of it
+	PrevHash     []byte
+	Nonce        int
 }
 
 // function that creates the hash based on the previous hash and the data -- replaced in proof.go
@@ -15,12 +20,12 @@ type Block struct {
 }*/
 
 // creating a block
-func CreateBlock(data string, PrevHash []byte) *Block {
+func CreateBlock(txs []*Transaction, PrevHash []byte) *Block {
 	block := &Block{
-		Hash:     []byte{},
-		Data:     []byte(data),
-		PrevHash: PrevHash,
-		Nonce:    0,
+		Hash:         []byte{},
+		Transactions: txs,
+		PrevHash:     PrevHash,
+		Nonce:        0,
 	}
 
 	pow := NewProof(block)
@@ -33,6 +38,21 @@ func CreateBlock(data string, PrevHash []byte) *Block {
 }
 
 // return a new block and empty previos hash
-func Genesis() *Block {
-	return CreateBlock("Genesis", []byte{})
+func Genesis(coinbase *Transaction) *Block {
+	return CreateBlock([]*Transaction{coinbase}, []byte{})
+}
+
+// uique representation of all of our hashes combined
+func (b *Block) HashTrasactions() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
+
+	for _, tx := range b.Transactions {
+		txHashes = append(txHashes, tx.ID)
+	}
+
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+
+	return txHash[:]
+
 }
