@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"reflect"
 )
 
 const walletFile = "./tmp/wallets.data"
@@ -29,6 +28,7 @@ func CreateWallets() (*Wallets, error) {
 	return &wallets, err
 }
 
+// get wallet by the address
 func (ws Wallets) GetWallet(address string) Wallet {
 	return *ws.Wallets[address]
 }
@@ -43,11 +43,9 @@ func (ws *Wallets) AddWallet() string {
 
 func (ws *Wallets) GetAllAdresses() []string {
 	var addresses []string
-
 	for address := range ws.Wallets {
 		addresses = append(addresses, address)
 	}
-
 	return addresses
 }
 
@@ -86,15 +84,9 @@ func (ws *Wallets) SaveFile() {
 
 	var content bytes.Buffer
 
-	fmt.Printf("%T\n", reflect.TypeOf(elliptic.P256()))
 	gob.Register(elliptic.P256().Params())
-
 	encoder := gob.NewEncoder(&content)
-	for add := range ws.Wallets {
-		println(add)
-	}
 	err := encoder.Encode(&ws)
-
 	if err != nil {
 		log.Panic(err)
 	}
@@ -108,11 +100,6 @@ func (ws *Wallets) SaveFile() {
 func createFile() {
 	wallets := &Wallets{}
 	wallets.Wallets = make(map[string]*Wallet)
-	println("printing")
-	for add := range wallets.Wallets {
-		println(add)
-	}
-	println("done")
 
 	var content bytes.Buffer
 

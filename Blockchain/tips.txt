@@ -1,0 +1,35 @@
+address: 1MAFEhuipSFSraQbbHCMvUSpuNHRpEzFkh
+Versioned hash: 00dd2224a873daf313626871c10299f7eafa409e44
+Version 00
+Pub key hash dd2224a873daf313626871c10299f7eafa409e44
+Full checksum: 2797a5f6c8cf213c0f11a19e6730edb0c9457c8cc1ab291286e137fb3d15e893
+Checksum
+
+
+public key
+-hash
+-rapid
+-> public key hash
+
+- version + public key hash
+-> versioned hash
+-hash
+-hash
+-> fullCheckusum
+-> Checksum
+
+- versionedhash + checksum
+
+-base58 encode
+-address
+
+- mining of blocks is not different from sending tokens
+- mining of the block is synchonious with creation of the transaction
+- and when a user send a token to another user he imediately mines it
+
+- each input of the transaction will store a public key which is not hashed and than a signature of the entire transaction
+
+-IDEA: the hash of the public key inside od the input will have to mach up with the referenced output
+
+- output has the hash of the public key directly inside of it, input public key not hashed
+- hashing method that is hashing the input public key and checking weather they are matching
