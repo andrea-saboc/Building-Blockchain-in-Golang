@@ -24,7 +24,7 @@ type Transaction struct {
 //we dont want to strore sensitive informations inside our blockchain
 //everything is stored is=nside these iputs and outputs
 
-func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction {
+func NewTransaction(from, to string, amount int, utxo *UTXOSet) *Transaction {
 	var inputs []TxInput
 	var outputs []TxOutput
 
@@ -35,7 +35,7 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 	w := wallets.GetWallet(from)
 	publicKeyHash := wallet.PublicKeyHash(w.PublicKey)
 
-	acc, validOutputs := chain.FindSpendableOutputs(publicKeyHash, amount)
+	acc, validOutputs := utxo.FindSpendableOutputs(publicKeyHash, amount)
 
 	if acc < amount {
 		log.Panic("Error: not enough funds")
@@ -66,7 +66,7 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 	tx := Transaction{nil, inputs, outputs}
 	tx.ID = tx.Hash()
 
-	chain.SignTransaction(&tx, w.PrivateKey)
+	utxo.BlockChain.SignTransaction(&tx, w.PrivateKey)
 
 	return &tx
 }

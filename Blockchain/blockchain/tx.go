@@ -2,13 +2,19 @@ package blockchain
 
 import (
 	"bytes"
+	"encoding/gob"
 	"github.com/andrea-saboc/Building-Blockchain-in-Golang/wallet"
+	"log"
 )
 
 type TxOutput struct {
 	Value      int    //value in tokend
 	PubKeyHash []byte //value that is needed to unlock the token inside value, very complicated scripting language called script
 	//cannot dereference the part of the output
+}
+
+type TxOutputs struct {
+	Outputs []TxOutput //unspent outputs
 }
 
 type TxInput struct {
@@ -43,4 +49,24 @@ func (out *TxOutput) Lock(address []byte) {
 
 func (out *TxOutput) IsLockedWithKey(pubKeyHash []byte) bool {
 	return bytes.Compare(out.PubKeyHash, pubKeyHash) == 0
+}
+
+func (outs TxOutputs) Serialize() []byte {
+	var buffer bytes.Buffer
+	encode := gob.NewEncoder(&buffer)
+	err := encode.Encode(outs)
+	if err != nil {
+		log.Panic(err)
+	}
+	return buffer.Bytes()
+}
+
+func DeserializeOutputs(data []byte) TxOutputs {
+	var outputs TxOutputs
+	decode := gob.NewDecoder(bytes.NewReader(data))
+	err := decode.Decode(&outputs)
+	if err != nil {
+		log.Panic(err)
+	}
+	return outputs
 }
