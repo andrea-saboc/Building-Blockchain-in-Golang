@@ -73,7 +73,12 @@ func NewTransaction(from, to string, amount int, utxo *UTXOSet) *Transaction {
 
 func CoinbaseTx(to, data string) *Transaction {
 	if data == "" {
-		data = fmt.Sprint("Coins to %s", to) //new data variable
+		randData := make([]byte, 24)  //slice of bytes of length 24
+		_, err := rand.Read(randData) //random generator inside radData generator
+		if err != nil {
+			log.Panic(err)
+		}
+		data = fmt.Sprint("%x", randData) //new data variable
 	}
 
 	txin := TxInput{
@@ -83,14 +88,14 @@ func CoinbaseTx(to, data string) *Transaction {
 		PubKey:    []byte(data),
 	}
 
-	txout := NewTXOutput(100, to)
+	txout := NewTXOutput(20, to)
 
 	tx := Transaction{
 		ID:      nil,
 		Inputs:  []TxInput{txin},
 		Outputs: []TxOutput{*txout},
 	}
-	tx.SetID()
+	tx.ID = tx.Hash()
 
 	return &tx
 }
@@ -116,20 +121,6 @@ func (tx *Transaction) Hash() []byte {
 	hash = sha256.Sum256(txCopy.Serialize())
 
 	return hash[:]
-}
-
-func (tx *Transaction) SetID() {
-	var encoded bytes.Buffer
-	var hash [32]byte
-
-	encode := gob.NewEncoder(&encoded)
-	err := encode.Encode(tx)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	hash = sha256.Sum256(encoded.Bytes())
-	tx.ID = hash[:]
 }
 
 func (tx *Transaction) IsCoinbase() bool {

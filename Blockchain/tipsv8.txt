@@ -1,0 +1,23 @@
+- make each of our coin based to have some random data inside of it
+
+-changing the send methond in command line
+    -creating a coinbase transaction
+    -user who's sending the transacation or creating the transaction is the one who's mining it in blockchain currently
+    - add the coinbase transaction in block
+    -verifyTransaction is verifying the coinbase transaction always
+
+-Merkle tree
+    -the full Bitcoin database takes up about 200 gb of diskpace
+    - it is decentralized
+    -every node have its independent and self-sufficient node which will store a copy of the Blockchain
+    - it became more unlikely that people would want to install such a large program to use bitcoin
+    -full fledged nodes need to verify transact
+    - SPV solution does not have to verify tx and download the whole blockchain
+    - it finds transactions in blocks and it is link to a full node which will retrieve the necessary data for it
+    - just wallet applications on their machine
+
+    -lefs of the tree must be even, so if inside of the tree we have 3 ransactions, then will have a transaction 4 that will be a copy of transaction 3
+
+    -benefits - just by looking at the merke tree we can verify weather is certain trnsactio iside our block
+
+-Add to blocks (to be represented by the merke tree structure)
